@@ -28,6 +28,58 @@ const answerItemSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const evaluationItemSchema = new mongoose.Schema(
+  {
+    questionIndex: {
+      type: Number,
+      required: true,
+    },
+    score: {
+      type: Number,
+      default: 0,
+    },
+    strengths: {
+      type: [String],
+      default: [],
+    },
+    improvements: {
+      type: [String],
+      default: [],
+    },
+    suggestedAnswer: {
+      type: String,
+      default: '',
+    },
+  },
+  { _id: false }
+);
+
+const overallFeedbackSchema = new mongoose.Schema(
+  {
+    summary: {
+      type: String,
+      default: '',
+    },
+    communicationRating: {
+      type: Number,
+      default: 0,
+    },
+    technicalRating: {
+      type: Number,
+      default: 0,
+    },
+    confidenceRating: {
+      type: Number,
+      default: 0,
+    },
+    finalFeedback: {
+      type: String,
+      default: '',
+    },
+  },
+  { _id: false }
+);
+
 const interviewSessionSchema = new mongoose.Schema(
   {
     user: {
@@ -54,6 +106,22 @@ const interviewSessionSchema = new mongoose.Schema(
     score: {
       type: Number,
       default: 0,
+    },
+    evaluations: {
+      type: [evaluationItemSchema],
+      default: [],
+    },
+    overallScore: {
+      type: Number,
+      default: 0,
+    },
+    overallFeedback: {
+      type: overallFeedbackSchema,
+      default: () => ({}),
+    },
+    aiEvaluationCompleted: {
+      type: Boolean,
+      default: false,
     },
   },
   {

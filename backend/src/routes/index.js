@@ -4,6 +4,7 @@ import authRoutes from './auth.routes.js';
 import questionRoutes from './question.routes.js';
 import interviewRoutes from './interview.routes.js';
 import dashboardRoutes from './dashboard.routes.js';
+import aiRoutes from './ai.routes.js';
 
 const router = Router();
 
@@ -12,5 +13,6 @@ router.use('/auth', authRoutes);
 router.use('/questions', questionRoutes);
 router.use('/interviews', interviewRoutes);
 router.use('/dashboard', dashboardRoutes);
+router.use('/ai', aiRoutes);
 
 export default router;

@@ -5,7 +5,9 @@ const formatSessionSummary = (session) => ({
   _id: session._id,
   category: session.category,
   difficulty: session.difficulty,
-  score: session.score ?? 0,
+  score: session.overallScore ?? session.score ?? 0,
+  overallScore: session.overallScore ?? session.score ?? 0,
+  aiEvaluationCompleted: session.aiEvaluationCompleted ?? false,
   createdAt: session.createdAt,
   questionCount: session.questions?.length || 0,
 });
@@ -70,7 +72,7 @@ export const getUserInterviews = async (req, res, next) => {
   try {
     const sessions = await InterviewSession.find({ user: req.user._id })
       .sort({ createdAt: -1 })
-      .select('category difficulty score createdAt questions');
+      .select('category difficulty score overallScore aiEvaluationCompleted createdAt questions');
 
     res.status(200).json({
       success: true,

@@ -8,6 +8,8 @@ import LoadingSpinner from '../components/common/LoadingSpinner.jsx';
 import ErrorMessage from '../components/common/ErrorMessage.jsx';
 import EmptyState from '../components/common/EmptyState.jsx';
 import StatCard from '../components/common/StatCard.jsx';
+import PerformanceTrend from '../components/dashboard/PerformanceTrend.jsx';
+import ScoreBadge from '../components/interview/ScoreBadge.jsx';
 
 function DashboardPage() {
   const user = getUser();
@@ -66,13 +68,48 @@ function DashboardPage() {
         <StatCard label="Total Interviews" value={stats.totalInterviews} />
         <StatCard label="Categories Practiced" value={categoriesPracticed} />
         <StatCard
-          label="Most Recent Interview"
-          value={stats.mostRecentInterviewDate ? formatDateShort(stats.mostRecentInterviewDate) : 'None yet'}
-          hint={stats.mostRecentInterviewDate ? formatDate(stats.mostRecentInterviewDate) : 'Complete your first interview'}
+          label="Average Score"
+          value={stats.evaluatedInterviewsCount > 0 ? `${stats.averageInterviewScore}/100` : 'N/A'}
+          hint={stats.evaluatedInterviewsCount > 0 ? `${stats.evaluatedInterviewsCount} evaluated` : 'Get AI feedback on interviews'}
+        />
+        <StatCard
+          label="Best Score"
+          value={stats.bestScore > 0 ? `${stats.bestScore}/100` : 'N/A'}
+          hint="Your highest interview score"
         />
       </div>
 
       <div className="dashboard-grid">
+        <section className="dashboard-panel">
+          <h2>Performance Trend</h2>
+          <PerformanceTrend trend={stats.performanceTrend} />
+        </section>
+
+        <section className="dashboard-panel">
+          <h2>Recent Scores</h2>
+
+          {stats.recentScores.length === 0 ? (
+            <EmptyState
+              title="No scores yet"
+              message="Complete an interview and receive AI feedback to track your scores."
+            />
+          ) : (
+            <ul className="score-list">
+              {stats.recentScores.map((item) => (
+                <li key={item.sessionId} className="score-list-item">
+                  <div>
+                    <p className="recent-title">
+                      {item.category} · {item.difficulty}
+                    </p>
+                    <p className="recent-date">{formatDate(item.createdAt)}</p>
+                  </div>
+                  <ScoreBadge score={item.score} size="sm" />
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
         <section className="dashboard-panel">
           <h2>Practice Statistics</h2>
 
@@ -135,6 +172,9 @@ function DashboardPage() {
                   <div>
                     <p className="recent-title">
                       {interview.category} · {interview.difficulty}
+                      {interview.aiEvaluationCompleted && (
+                        <span className="inline-score"> · {interview.overallScore ?? interview.score}/100</span>
+                      )}
                     </p>
                     <p className="recent-date">{formatDate(interview.createdAt)}</p>
                   </div>

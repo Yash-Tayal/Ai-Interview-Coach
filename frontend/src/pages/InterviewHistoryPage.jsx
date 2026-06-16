@@ -62,6 +62,7 @@ function InterviewHistoryPage() {
                 <th>Date</th>
                 <th>Category</th>
                 <th>Difficulty</th>
+                <th>Score</th>
                 <th>Questions</th>
                 <th>Action</th>
               </tr>
@@ -75,6 +76,13 @@ function InterviewHistoryPage() {
                     <span className={`badge badge-${interview.difficulty.toLowerCase()}`}>
                       {interview.difficulty}
                     </span>
+                  </td>
+                  <td>
+                    {interview.aiEvaluationCompleted ? (
+                      <span className="score-pill">{interview.overallScore ?? interview.score}/100</span>
+                    ) : (
+                      <span className="score-pill pending">Pending</span>
+                    )}
                   </td>
                   <td>{interview.questionCount}</td>
                   <td>
