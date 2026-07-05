@@ -13,6 +13,7 @@ function Navbar() {
         </NavLink>
         <NavLink to="/register">Register</NavLink>
         <NavLink to="/dashboard">Dashboard</NavLink>
+        <NavLink to="/resume-analyzer">Resume</NavLink>
         <NavLink to="/interview/history">History</NavLink>
         <NavLink to="/interview/setup">Interview</NavLink>
       </nav>

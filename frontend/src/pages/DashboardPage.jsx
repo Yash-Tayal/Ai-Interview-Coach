@@ -59,9 +59,14 @@ function DashboardPage() {
           <h1>Dashboard</h1>
           <p>Welcome back{user?.name ? `, ${user.name}` : ''}. Track your interview practice progress.</p>
         </div>
-        <Link to="/interview/setup" className="link-button">
-          Start Interview
-        </Link>
+        <div className="page-header-actions">
+          <Link to="/interview/setup" className="link-button">
+            Start Interview
+          </Link>
+          <Link to="/resume-analyzer" className="link-button link-button-secondary">
+            Analyze Resume
+          </Link>
+        </div>
       </div>
 
       <div className="stat-grid">
@@ -76,6 +81,21 @@ function DashboardPage() {
           label="Best Score"
           value={stats.bestScore > 0 ? `${stats.bestScore}/100` : 'N/A'}
           hint="Your highest interview score"
+        />
+        <StatCard
+          label="Resumes Analyzed"
+          value={stats.totalResumesAnalyzed ?? 0}
+          hint="Total resume ATS analyses"
+        />
+        <StatCard
+          label="Latest ATS Score"
+          value={stats.latestAtsScore != null ? `${stats.latestAtsScore}/100` : 'N/A'}
+          hint={stats.latestResumeDate ? `Last analyzed ${formatDateShort(stats.latestResumeDate)}` : 'Upload a resume to analyze'}
+        />
+        <StatCard
+          label="Best ATS Score"
+          value={stats.bestAtsScore != null ? `${stats.bestAtsScore}/100` : 'N/A'}
+          hint="Your highest resume ATS score"
         />
       </div>
 

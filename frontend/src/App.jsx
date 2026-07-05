@@ -9,6 +9,9 @@ import InterviewPage from './pages/InterviewPage.jsx';
 import ResultsPage from './pages/ResultsPage.jsx';
 import InterviewHistoryPage from './pages/InterviewHistoryPage.jsx';
 import InterviewDetailsPage from './pages/InterviewDetailsPage.jsx';
+import ResumeAnalyzerPage from './pages/ResumeAnalyzerPage.jsx';
+import ResumeReportPage from './pages/ResumeReportPage.jsx';
+import ResumeHistoryPage from './pages/ResumeHistoryPage.jsx';
 
 function App() {
   return (
@@ -64,6 +67,30 @@ function App() {
               element={
                 <ProtectedRoute>
                   <InterviewDetailsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/resume-analyzer"
+              element={
+                <ProtectedRoute>
+                  <ResumeAnalyzerPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/resume-analyzer/history"
+              element={
+                <ProtectedRoute>
+                  <ResumeHistoryPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/resume-analyzer/:id"
+              element={
+                <ProtectedRoute>
+                  <ResumeReportPage />
                 </ProtectedRoute>
               }
             />
