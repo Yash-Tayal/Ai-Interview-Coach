@@ -1,19 +1,19 @@
-import OpenAI from 'openai';
+import { GoogleGenAI, Type } from '@google/genai';
 import { env } from '../config/env.js';
 import { AppError } from '../utils/AppError.js';
 
-let openaiClient = null;
+let geminiClient = null;
 
-const getOpenAIClient = () => {
-  if (!env.aiApiKey) {
-    throw new AppError('AI API key is not configured. Set AI_API_KEY in your environment.', 503);
+const getGeminiClient = () => {
+  if (!env.geminiApiKey) {
+    throw new AppError('AI API key is not configured. Set GEMINI_API_KEY in your environment.', 503);
   }
 
-  if (!openaiClient) {
-    openaiClient = new OpenAI({ apiKey: env.aiApiKey });
+  if (!geminiClient) {
+    geminiClient = new GoogleGenAI({ apiKey: env.geminiApiKey });
   }
 
-  return openaiClient;
+  return geminiClient;
 };
 
 const parseJsonResponse = (content) => {
@@ -81,30 +81,62 @@ Rules:
 - finalFeedback: 3-5 sentences of actionable coaching advice
 - Be professional and encouraging while honest about gaps`;
 
-export const evaluateAnswer = async (question, answer) => {
-  try {
-    const client = getOpenAIClient();
+const ANSWER_EVALUATION_SCHEMA = {
+  type: Type.OBJECT,
+  properties: {
+    score: { type: Type.INTEGER },
+    strengths: { type: Type.ARRAY, items: { type: Type.STRING } },
+    improvements: { type: Type.ARRAY, items: { type: Type.STRING } },
+    suggestedAnswer: { type: Type.STRING },
+  },
+  required: ['score', 'strengths', 'improvements', 'suggestedAnswer'],
+};
 
-    const response = await client.chat.completions.create({
-    model: env.openaiModel,
-    temperature: 0.3,
-    response_format: { type: 'json_object' },
-    messages: [
-      { role: 'system', content: ANSWER_EVALUATION_PROMPT },
-      {
-        role: 'user',
-        content: JSON.stringify({
-          question,
-          answer: answer || 'No answer provided',
-        }),
-      },
-    ],
+const OVERALL_FEEDBACK_SCHEMA = {
+  type: Type.OBJECT,
+  properties: {
+    summary: { type: Type.STRING },
+    communicationRating: { type: Type.INTEGER },
+    technicalRating: { type: Type.INTEGER },
+    confidenceRating: { type: Type.INTEGER },
+    finalFeedback: { type: Type.STRING },
+  },
+  required: ['summary', 'communicationRating', 'technicalRating', 'confidenceRating', 'finalFeedback'],
+};
+
+const generateJsonContent = async (systemInstruction, userContent, responseJsonSchema) => {
+  const client = getGeminiClient();
+
+  const response = await client.models.generateContent({
+    model: env.geminiModel,
+    contents: userContent,
+    config: {
+      systemInstruction,
+      temperature: 0.3,
+      responseMimeType: 'application/json',
+      responseJsonSchema,
+      thinkingConfig: { thinkingBudget: 0 },
+    },
   });
 
-  const content = response.choices[0]?.message?.content;
+  const content = response.text;
   if (!content) {
     throw new AppError('Empty response from AI service', 502);
   }
+
+  return content;
+};
+
+export const evaluateAnswer = async (question, answer) => {
+  try {
+    const content = await generateJsonContent(
+      ANSWER_EVALUATION_PROMPT,
+      JSON.stringify({
+        question,
+        answer: answer || 'No answer provided',
+      }),
+      ANSWER_EVALUATION_SCHEMA,
+    );
 
     return normalizeAnswerEvaluation(parseJsonResponse(content));
   } catch (error) {
@@ -117,39 +149,25 @@ export const evaluateAnswer = async (question, answer) => {
 
 export const generateOverallFeedback = async ({ category, difficulty, evaluations }) => {
   try {
-    const client = getOpenAIClient();
+    const content = await generateJsonContent(
+      OVERALL_FEEDBACK_PROMPT,
+      JSON.stringify({
+        category,
+        difficulty,
+        evaluations,
+      }),
+      OVERALL_FEEDBACK_SCHEMA,
+    );
 
-    const response = await client.chat.completions.create({
-    model: env.openaiModel,
-    temperature: 0.3,
-    response_format: { type: 'json_object' },
-    messages: [
-      { role: 'system', content: OVERALL_FEEDBACK_PROMPT },
-      {
-        role: 'user',
-        content: JSON.stringify({
-          category,
-          difficulty,
-          evaluations,
-        }),
-      },
-    ],
-  });
+    const parsed = parseJsonResponse(content);
 
-  const content = response.choices[0]?.message?.content;
-  if (!content) {
-    throw new AppError('Empty response from AI service', 502);
-  }
-
-  const parsed = parseJsonResponse(content);
-
-  return {
-    summary: typeof parsed.summary === 'string' ? parsed.summary.trim() : '',
-    communicationRating: clampScore(parsed.communicationRating, 0),
-    technicalRating: clampScore(parsed.technicalRating, 0),
-    confidenceRating: clampScore(parsed.confidenceRating, 0),
-    finalFeedback: typeof parsed.finalFeedback === 'string' ? parsed.finalFeedback.trim() : '',
-  };
+    return {
+      summary: typeof parsed.summary === 'string' ? parsed.summary.trim() : '',
+      communicationRating: clampScore(parsed.communicationRating, 0),
+      technicalRating: clampScore(parsed.technicalRating, 0),
+      confidenceRating: clampScore(parsed.confidenceRating, 0),
+      finalFeedback: typeof parsed.finalFeedback === 'string' ? parsed.finalFeedback.trim() : '',
+    };
   } catch (error) {
     if (error instanceof AppError) {
       throw error;
