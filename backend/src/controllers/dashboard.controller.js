@@ -1,10 +1,20 @@
 import InterviewSession from '../models/InterviewSession.js';
+import Resume from '../models/Resume.js';
 
 export const getDashboardStats = async (req, res, next) => {
   try {
     const userId = req.user._id;
 
-    const [totalInterviews, categoryStats, difficultyStats, recentSession, evaluatedSessions] =
+    const [
+      totalInterviews,
+      categoryStats,
+      difficultyStats,
+      recentSession,
+      evaluatedSessions,
+      totalResumes,
+      latestResume,
+      bestResume,
+    ] =
       await Promise.all([
         InterviewSession.countDocuments({ user: userId }),
         InterviewSession.aggregate([
@@ -26,6 +36,9 @@ export const getDashboardStats = async (req, res, next) => {
         })
           .sort({ createdAt: -1 })
           .select('overallScore score createdAt category difficulty'),
+        Resume.countDocuments({ user: userId }),
+        Resume.findOne({ user: userId }).sort({ createdAt: -1 }).select('atsScore createdAt'),
+        Resume.findOne({ user: userId }).sort({ atsScore: -1 }).select('atsScore'),
       ]);
 
     const scores = evaluatedSessions.map((session) => session.overallScore ?? session.score ?? 0);
@@ -68,6 +81,10 @@ export const getDashboardStats = async (req, res, next) => {
         evaluatedInterviewsCount: evaluatedSessions.length,
         recentScores,
         performanceTrend,
+        totalResumesAnalyzed: totalResumes,
+        latestAtsScore: latestResume?.atsScore ?? null,
+        bestAtsScore: bestResume?.atsScore ?? null,
+        latestResumeDate: latestResume?.createdAt || null,
       },
     });
   } catch (error) {

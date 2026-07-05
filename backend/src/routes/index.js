@@ -5,6 +5,7 @@ import questionRoutes from './question.routes.js';
 import interviewRoutes from './interview.routes.js';
 import dashboardRoutes from './dashboard.routes.js';
 import aiRoutes from './ai.routes.js';
+import resumeRoutes from './resume.routes.js';
 
 const router = Router();
 
@@ -14,5 +15,6 @@ router.use('/questions', questionRoutes);
 router.use('/interviews', interviewRoutes);
 router.use('/dashboard', dashboardRoutes);
 router.use('/ai', aiRoutes);
+router.use('/resume', resumeRoutes);
 
 export default router;
